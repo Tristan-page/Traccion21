@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de cotizaciones — Tracción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121317;
+    --bg-alt: #1a1c22;
+    --surface: #202229;
+    --line: #2e3038;
+    --text: #f1efea;
+    --text-muted: #9c9fa8;
+    --accent: #e6531f;
+    --accent-soft: rgba(230,83,31,0.16);
+    --green: #2f8f52;
+    --green-soft: rgba(47,143,82,0.15);
+    --yellow: #f2b33d;
+    --radius: 6px;
+    --maxw: 1180px;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0; background: var(--bg); color: var(--text);
+    font-family: 'Barlow', sans-serif; font-size:17px; line-height:1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,.display{ font-family:'Barlow Condensed'; font-weight:800; line-height:1.02; margin:0; }
+  a{ color:inherit; text-decoration:none; }
+  button{
+    font-family:inherit; cursor:pointer;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
+    background: none; border: none; color: inherit; margin:0;
+  }
+  select{
+    font-family: inherit;
+    -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  }
+  .wrap{ max-width: var(--maxw); margin:0 auto; padding: 0 28px; }
+  :focus-visible{ outline:2px solid var(--yellow); outline-offset:3px; }
+
+  header{
+    position: sticky; top:0; z-index:50;
+    background: rgba(18,19,23,0.9); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.wrap{ display:flex; align-items:center; justify-content:space-between; height:76px; }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Barlow Condensed'; font-weight:800; font-size:26px; }
+  .brand .mark{ width:30px; height:30px; }
+  .back-link{ display:flex; align-items:center; gap:8px; color: var(--text-muted); font-size:16px; }
+  .back-link:hover{ color: var(--text); }
+  .back-link svg{ width:16px; height:16px; }
+
+  .page-head{
+    padding: 56px 0 40px;
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .page-head h1{ font-size: clamp(34px,4vw,48px); }
+  .page-head p{ color: var(--text-muted); margin-top:10px; max-width:52ch; }
+  .head-actions{ display:flex; gap:12px; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 11px 20px; border-radius: var(--radius);
+    font-size:15px; font-weight:600; border:1px solid var(--line); color: var(--text);
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .btn:hover{ border-color: var(--text-muted); }
+  .btn:active{ transform: scale(0.97); }
+  .btn-danger:hover{ border-color: var(--accent); background: var(--accent-soft); }
+
+  .stats-row{
+    display:flex; border:1px solid var(--line); border-radius: var(--radius);
+    overflow:hidden; margin: 36px 0 44px;
+  }
+  .stats-row .stat{ flex:1; padding: 26px 30px; border-right:1px solid var(--line); }
+  .stats-row .stat:last-child{ border-right:none; }
+  .stats-row .num{ font-family:'Barlow Condensed'; font-weight:800; font-size:36px; color: var(--accent); }
+  .stats-row .label{ margin-top:6px; color: var(--text-muted); font-size:15px; }
+
+  .toolbar{ display:flex; gap:16px; align-items:center; margin-bottom: 26px; flex-wrap:wrap; }
+  .search-input{
+    flex:1; min-width:220px;
+    background: var(--surface); border:1px solid var(--line); color: var(--text);
+    padding: 12px 16px; border-radius: var(--radius); font-size:16px; font-family:inherit;
+  }
+  .search-input:focus{ border-color: var(--accent); }
+  .filter-tabs{ display:flex; gap:22px; }
+  .filter-tab{
+    background:none; border:none; color: var(--text-muted); font-size:15px;
+    padding: 8px 2px; border-bottom:2px solid transparent;
+  }
+  .filter-tab.active{ color: var(--text); border-color: var(--accent); }
+
+  table{ width:100%; border-collapse: collapse; }
+  thead th{
+    text-align:left; font-weight:500; font-size:14px; color: var(--text-muted);
+    padding: 16px; border-bottom:1px solid var(--line);
+  }
+  .qrow td{ padding: 20px 16px; border-bottom:1px solid var(--line); vertical-align: top; font-size:16px; }
+  .qrow:hover{ background: var(--bg-alt); }
+  .client-cell{ display:flex; gap:14px; align-items:flex-start; }
+  .avatar{
+    width:38px; height:38px; border-radius:50%; flex:none;
+    background: var(--accent-soft); color: var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Barlow Condensed'; font-weight:700; font-size:17px;
+  }
+  .client-cell .names{ display:flex; flex-direction:column; }
+  .client-cell .name{ font-weight:600; }
+  .client-cell .phone{ font-size:14px; color: var(--text-muted); margin-top:2px; }
+  .detail-text{ color: var(--text); max-width: 30ch; }
+  .msg-text{ color: var(--text-muted); font-size:15px; max-width: 30ch; }
+  .date-text{ color: var(--text-muted); font-size:14px; white-space:nowrap; }
+  .status-select{
+    background: var(--surface); border:1px solid var(--line); color: var(--text);
+    font-size:14px; padding:8px 30px 8px 10px; border-radius: var(--radius); font-family:inherit;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%239c9fa8' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  .row-actions{ display:flex; gap:10px; justify-content:flex-end; }
+  .icon-btn{
+    background:none; border:1px solid var(--line); color: var(--text-muted);
+    width:34px; height:34px; border-radius: var(--radius);
+    display:flex; align-items:center; justify-content:center;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .icon-btn:hover{ border-color: var(--accent); color: var(--accent); }
+  .icon-btn svg{ width:16px; height:16px; }
+
+  .empty-state{
+    text-align:center; padding: 90px 20px; color: var(--text-muted);
+    border: 1px dashed var(--line); border-radius: var(--radius);
+  }
+  .empty-state svg{ width:52px; height:52px; margin: 0 auto 20px; color: var(--text-muted); }
+  .empty-state h3{ color: var(--text); font-size:24px; margin-bottom:8px; }
+  .empty-state a{ color: var(--accent); font-weight:600; }
+
+  footer{ padding: 50px 0 40px; color: var(--text-muted); font-size:14px; border-top:1px solid var(--line); margin-top: 60px; }
+
+  /* ---------- LOGIN ---------- */
+  .login-screen{
+    min-height: calc(100vh - 76px);
+    display:flex; align-items:center; justify-content:center;
+    padding: 40px 24px;
+  }
+  .login-card{
+    width: 100%; max-width: 380px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-alt);
+    padding: 40px 34px;
+  }
+  .login-card .mark-wrap{
+    width:46px; height:46px; border-radius:50%;
+    background: var(--accent-soft); color: var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom: 22px;
+  }
+  .login-card .mark-wrap svg{ width:24px; height:24px; }
+  .login-card h1{ font-size: 28px; margin-bottom:8px; }
+  .login-card p{ color: var(--text-muted); font-size:15px; margin-bottom: 26px; }
+  .login-field{ display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .login-field label{ font-size:14px; color: var(--text-muted); }
+  .login-field input{
+    background: var(--surface); border:1px solid var(--line); color: var(--text);
+    padding: 13px 16px; border-radius: var(--radius); font-size:16px; font-family:inherit;
+  }
+  .login-field input:focus{ border-color: var(--accent); }
+  .login-error{
+    color: var(--accent); font-size:14px; margin: -6px 0 16px; display:none;
+  }
+  .login-error.show{ display:block; }
+  .login-submit{
+    width:100%; justify-content:center;
+    background: var(--accent); color:#fff; border:none;
+    padding: 13px 20px; border-radius: var(--radius); font-size:16px; font-weight:600;
+  }
+  .login-submit:hover{ background:#f16436; }
+  .logout-link{ display:flex; align-items:center; gap:8px; color: var(--text-muted); font-size:15px; }
+  .logout-link:hover{ color: var(--text); }
+  .app-content{ display:none; }
+
+  @media (max-width: 800px){
+    thead{ display:none; }
+    table, tbody, .qrow{ display:block; width:100%; }
+    .qrow{ padding: 20px 0; border-bottom:1px solid var(--line); }
+    .qrow td{ display:block; border:none; padding: 4px 0; }
+    .row-actions{ justify-content:flex-start; margin-top:10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="tienda-llantas.html" class="brand">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.2"/>
+        <circle cx="16" cy="16" r="5.2" stroke="currentColor" stroke-width="2.2"/>
+      </svg>
+      Tracción
+    </a>
+    <div style="display:flex; align-items:center; gap:26px;">
+      <a href="tienda-llantas.html" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Volver al sitio
+      </a>
+      <button class="logout-link app-content" id="logout-btn" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="mark-wrap">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 15v2M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
+    </div>
+    <h1>Acceso al panel</h1>
+    <p>Ingresa tus datos para ver las cotizaciones recibidas.</p>
+    <form id="login-form">
+      <div class="login-field">
+        <label for="login-user">Usuario</label>
+        <input id="login-user" type="text" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label for="login-pass">Contraseña</label>
+        <input id="login-pass" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="login-error" id="login-error">Usuario o contraseña incorrectos.</p>
+      <button type="submit" class="btn login-submit">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap app-content" id="app-content">
+  <div class="page-head">
+    <div>
+      <h1>Cotizaciones recibidas</h1>
+      <p>Solicitudes enviadas desde el formulario del sitio. Se guardan en este navegador — actualiza el estado conforme les des seguimiento.</p>
+    </div>
+    <div class="head-actions">
+      <button class="btn" id="export-btn">Exportar CSV</button>
+      <button class="btn btn-danger" id="clear-btn">Vaciar todo</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="search-input" placeholder="Buscar por nombre, teléfono o medida...">
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" data-status="all">Todas</button>
+      <button class="filter-tab" data-status="nueva">Nuevas</button>
+      <button class="filter-tab" data-status="contactada">Contactadas</button>
+      <button class="filter-tab" data-status="cerrada">Cerradas</button>
+    </div>
+  </div>
+
+  <table id="quotes-table">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Solicitud</th>
+        <th>Fecha</th>
+        <th>Estado</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="quotes-body"></tbody>
+  </table>
+
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 5c0-.6.4-1 1-1h3l2 5-2 1.5a11 11 0 0 0 5.5 5.5L15 14l5 2v3c0 .6-.4 1-1 1C10.6 20 4 13.4 4 5Z" stroke="currentColor" stroke-width="1.6"/></svg>
+    <h3>Aún no hay cotizaciones</h3>
+    <p>En cuanto alguien llene el formulario en la <a href="tienda-llantas.html#cotiza">página principal</a>, aparecerá aquí.</p>
+  </div>
+
+
+  <footer>
+    <span>Panel interno de Tracción Llantas — solo visible para el equipo del taller.</span>
+  </footer>
+</div>
+
+<script>
+  const STORAGE_KEY = 'traccion_cotizaciones';
+  let currentStatusFilter = 'all';
+  let currentSearch = '';
+
+  function loadQuotes(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(err){ return []; }
+  }
+  function saveQuotes(list){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+  function formatDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) + ' · ' +
+           d.toLocaleTimeString('es-MX', { hour:'2-digit', minute:'2-digit' });
+  }
+  function initials(name){
+    return (name || '?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  }
+
+  function statusLabel(status){
+    return { nueva:'Nueva', contactada:'Contactada', cerrada:'Cerrada' }[status] || 'Nueva';
+  }
+
+  function render(){
+    const all = loadQuotes().sort((a,b)=> new Date(b.fecha) - new Date(a.fecha));
+
+    // stats
+    const nuevas = all.filter(q=>q.estado === 'nueva').length;
+    const contactadas = all.filter(q=>q.estado === 'contactada').length;
+    const cerradas = all.filter(q=>q.estado === 'cerrada').length;
+    document.getElementById('stats-row').innerHTML = `
+      <div class="stat"><div class="num">${all.length}</div><div class="label">Total recibidas</div></div>
+      <div class="stat"><div class="num">${nuevas}</div><div class="label">Sin contactar</div></div>
+      <div class="stat"><div class="num">${contactadas}</div><div class="label">En seguimiento</div></div>
+      <div class="stat"><div class="num">${cerradas}</div><div class="label">Cerradas</div></div>
+    `;
+
+    let filtered = currentStatusFilter === 'all' ? all : all.filter(q => q.estado === currentStatusFilter);
+    if(currentSearch.trim()){
+      const s = currentSearch.trim().toLowerCase();
+      filtered = filtered.filter(q =>
+        (q.nombre||'').toLowerCase().includes(s) ||
+        (q.telefono||'').toLowerCase().includes(s) ||
+        (q.detalle||'').toLowerCase().includes(s)
+      );
+    }
+
+    const body = document.getElementById('quotes-body');
+    const table = document.getElementById('quotes-table');
+    const empty = document.getElementById('empty-state');
+
+    if(all.length === 0){
+      table.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    table.style.display = '';
+    empty.style.display = filtered.length ? 'none' : 'block';
+    if(!filtered.length){
+      empty.querySelector('h3').textContent = 'No hay resultados';
+      empty.querySelector('p').innerHTML = 'Ninguna cotización coincide con tu búsqueda o filtro.';
+    }
+
+    body.innerHTML = filtered.map(q => `
+      <tr class="qrow">
+        <td>
+          <div class="client-cell">
+            <div class="avatar">${initials(q.nombre)}</div>
+            <div class="names">
+              <span class="name">${q.nombre || 'Sin nombre'}</span>
+              <span class="phone">${q.telefono || 'Sin teléfono'}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="detail-text">${q.detalle || '—'}</div>
+          ${q.mensaje ? `<div class="msg-text">${q.mensaje}</div>` : ''}
+        </td>
+        <td><span class="date-text">${formatDate(q.fecha)}</span></td>
+        <td>
+          <select class="status-select" data-id="${q.id}">
+            <option value="nueva" ${q.estado==='nueva'?'selected':''}>Nueva</option>
+            <option value="contactada" ${q.estado==='contactada'?'selected':''}>Contactada</option>
+            <option value="cerrada" ${q.estado==='cerrada'?'selected':''}>Cerrada</option>
+          </select>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn delete-btn" data-id="${q.id}" aria-label="Eliminar">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('.status-select').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const list = loadQuotes();
+        const item = list.find(q => String(q.id) === sel.dataset.id);
+        if(item){ item.estado = sel.value; saveQuotes(list); render(); }
+      });
+    });
+    body.querySelectorAll('.delete-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(!confirm('¿Eliminar esta cotización?')) return;
+        const list = loadQuotes().filter(q => String(q.id) !== btn.dataset.id);
+        saveQuotes(list);
+        render();
+      });
+    });
+  }
+
+  document.getElementById('filter-tabs').addEventListener('click', (e)=>{
+    const tab = e.target.closest('.filter-tab');
+    if(!tab) return;
+    document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentStatusFilter = tab.dataset.status;
+    render();
+  });
+
+  document.getElementById('search-input').addEventListener('input', (e)=>{
+    currentSearch = e.target.value;
+    render();
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', ()=>{
+    if(!confirm('Esto eliminará todas las cotizaciones guardadas en este navegador. ¿Continuar?')) return;
+    saveQuotes([]);
+    render();
+  });
+
+  document.getElementById('export-btn').addEventListener('click', ()=>{
+    const list = loadQuotes();
+    if(!list.length){ alert('No hay cotizaciones para exportar.'); return; }
+    const header = ['Fecha','Nombre','Teléfono','Detalle','Mensaje','Estado'];
+    const rows = list.map(q => [
+      formatDate(q.fecha), q.nombre, q.telefono, q.detalle, (q.mensaje||'').replace(/\n/g,' '), statusLabel(q.estado)
+    ]);
+    const csv = [header, ...rows]
+      .map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cotizaciones-traccion.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ---------- Acceso al panel ----------
+  // Por ahora no se valida contra un usuario/contraseña específico:
+  // con solo llenar ambos campos se entra al panel de cotizaciones.
+  const AUTH_KEY = 'traccion_panel_auth';
+
+  function mostrarPanel(){
+    document.getElementById('login-screen').style.display = 'none';
+    document.querySelectorAll('.app-content').forEach(el => {
+      el.style.display = (el.tagName === 'BUTTON') ? 'flex' : 'block';
+    });
+    render();
+  }
+
+  function mostrarLogin(){
+    document.getElementById('login-screen').style.display = 'flex';
+    document.querySelectorAll('.app-content').forEach(el => el.style.display = 'none');
+    document.getElementById('logout-btn').style.display = 'none';
+  }
+
+  if(sessionStorage.getItem(AUTH_KEY) === 'ok'){
+    mostrarPanel();
+  }else{
+    mostrarLogin();
+  }
+
+  document.getElementById('login-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    const usuario = document.getElementById('login-user').value.trim();
+    const contraseña = document.getElementById('login-pass').value.trim();
+    const errorMsg = document.getElementById('login-error');
+
+    if(usuario && contraseña){
+      sessionStorage.setItem(AUTH_KEY, 'ok');
+      errorMsg.classList.remove('show');
+      mostrarPanel();
+    }else{
+      errorMsg.textContent = 'Escribe un usuario y una contraseña para continuar.';
+      errorMsg.classList.add('show');
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', function(){
+    sessionStorage.removeItem(AUTH_KEY);
+    document.getElementById('login-form').reset();
+    mostrarLogin();
+  });
+</script>
+
+</body>
+</html>
